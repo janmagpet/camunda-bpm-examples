@@ -42,25 +42,24 @@ public class ExampleConnector extends Connector {
   public void init(ConnectorConfiguration config) {
     super.init(config);
     rootNode = new ExampleConnectorNode("/", getId(), ConnectorNodeType.FOLDER);
-    folder = new ExampleConnectorNode("/aFolder", getId(), ConnectorNodeType.FOLDER);
+    folder = new ExampleConnectorNode(config.getProperties().get("folderName"), getId(), ConnectorNodeType.FOLDER);
   }
 
   public ConnectorNode createNode(String parentId, String label, ConnectorNodeType type, String message) {
     ExampleConnectorNode newNode = new ExampleConnectorNode(label, getId());
-    System.out.println("created new node with id "+label);
     nodes.put(label, newNode);
     return newNode;
   }
 
-  public void deleteNode(ConnectorNode node, String arg1) {
+  public void deleteNode(ConnectorNode node, String message) {
     nodes.remove(node.getLabel());
   }
 
-  public List<ConnectorNode> getChildren(ConnectorNode arg0) {
-    if(arg0.getId().equals(folder.getId())) {
+  public List<ConnectorNode> getChildren(ConnectorNode parent) {
+    if(parent.getId().equals(folder.getId())) {
       return new ArrayList<ConnectorNode>(nodes.values());
     }
-    else if(arg0.getId().equals(rootNode.getId())) {
+    else if(parent.getId().equals(rootNode.getId())) {
       return Collections.<ConnectorNode>singletonList(folder);
     }
     else {
@@ -68,8 +67,8 @@ public class ExampleConnector extends Connector {
     }
   }
 
-  public InputStream getContent(ConnectorNode arg0) {
-    ExampleConnectorNode exampleConnectorNode = nodes.get(arg0.getId());
+  public InputStream getContent(ConnectorNode node) {
+    ExampleConnectorNode exampleConnectorNode = nodes.get(node.getId());
     ByteArrayInputStream inputStream = null;
     if(exampleConnectorNode == null) {
       inputStream = new ByteArrayInputStream(new byte[0]);
@@ -84,18 +83,18 @@ public class ExampleConnector extends Connector {
     return inputStream;
   }
 
-  public ContentInformation getContentInformation(ConnectorNode arg0) {
-    ExampleConnectorNode node = nodes.get(arg0.getId());
-    if(node == null) {
+  public ContentInformation getContentInformation(ConnectorNode node) {
+    ExampleConnectorNode exampleConnectorNode = nodes.get(node.getId());
+    if(exampleConnectorNode == null) {
       return ContentInformation.notFound();
     }
     else {
-      return new ContentInformation(true, node.getLastModified());
+      return new ContentInformation(true, exampleConnectorNode.getLastModified());
     }
   }
 
-  public ConnectorNode getNode(String arg0) {
-    return nodes.get(arg0);
+  public ConnectorNode getNode(String id) {
+    return nodes.get(id);
   }
 
   public ConnectorNode getRoot() {
@@ -110,16 +109,16 @@ public class ExampleConnector extends Connector {
     return false;
   }
 
-  public ContentInformation updateContent(ConnectorNode arg0, InputStream arg1, String arg2) throws Exception {
-    ExampleConnectorNode exampleConnectorNode = nodes.get(arg0.getId());
+  public ContentInformation updateContent(ConnectorNode node, InputStream newContent, String message) throws Exception {
+    ExampleConnectorNode exampleConnectorNode = nodes.get(node.getId());
     if(exampleConnectorNode == null) {
-      throw new RuntimeException("Node with id "+arg0.getId()+" not found.");
+      throw new RuntimeException("Node with id "+node.getId()+" not found.");
     }
     else {
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       byte[] buffer = new byte[1024];
       int bytesRead = 0;
-      while((bytesRead = arg1.read(buffer, 0, buffer.length))> 0) {
+      while((bytesRead = newContent.read(buffer, 0, buffer.length))> 0) {
         byteArrayOutputStream.write(buffer, 0, bytesRead);
       }
       exampleConnectorNode.setContent(byteArrayOutputStream.toByteArray());

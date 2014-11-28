@@ -18,7 +18,7 @@ import org.camunda.bpm.cycle.connector.ConnectorNode;
 import org.camunda.bpm.cycle.connector.ConnectorNodeType;
 
 /**
- * @author Daniel Meyer
+ * A connector Node which stores the content of the node
  *
  */
 public class ExampleConnectorNode extends ConnectorNode {
@@ -26,7 +26,6 @@ public class ExampleConnectorNode extends ConnectorNode {
   private static final long serialVersionUID = 1L;
 
   protected byte[] content;
-  protected Date lastModified;
 
   public ExampleConnectorNode(String label, long connectorId) {
     super(label, label, connectorId, ConnectorNodeType.BPMN_FILE);
@@ -41,12 +40,8 @@ public class ExampleConnectorNode extends ConnectorNode {
   }
 
   public void setContent(byte[] content) {
-    lastModified = new Date();
+    this.setLastModified(new Date());
     this.content = content;
-  }
-
-  public Date getLastModified() {
-    return lastModified;
   }
 
 }
